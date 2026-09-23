@@ -4,57 +4,39 @@ namespace RoyalFlush.Interaction
 {
     public class PlayerInteraction : MonoBehaviour
     {
-        [Header("Interaction Settings")]
-        [SerializeField] private Transform interactionPoint;
-        [SerializeField] private float interactionRadius = 1f;
-        [SerializeField] private LayerMask interactableMask;
-
         private IInteractable currentInteractable;
 
         private void Update()
         {
-            CheckForInteractable();
-
+            // ถ้ามีของให้กดได้ และผู้เล่นกดปุ่ม E
             if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
             {
                 currentInteractable.Interact();
             }
         }
 
-        private void CheckForInteractable()
+        // เมื่อเดินไปชนโดนกล่องที่มี Trigger
+        private void OnTriggerEnter2D(Collider2D other)
         {
-            Collider2D collider = Physics2D.OverlapCircle(interactionPoint.position, interactionRadius, interactableMask);
-
-            if (collider != null)
+            IInteractable interactable = other.GetComponent<IInteractable>();
+            
+            if (interactable != null)
             {
-                IInteractable interactable = collider.GetComponent<IInteractable>();
-
-                if (interactable != null && interactable != currentInteractable)
-                {
-                    if (currentInteractable != null)
-                    {
-                        currentInteractable.HideInteractionPrompt();
-                    }
-                    
-                    currentInteractable = interactable;
-                    currentInteractable.ShowInteractionPrompt();
-                }
-            }
-            else
-            {
-                if (currentInteractable != null)
-                {
-                    currentInteractable.HideInteractionPrompt();
-                    currentInteractable = null;
-                }
+                currentInteractable = interactable;
+                currentInteractable.ShowInteractionPrompt();
             }
         }
 
-        private void OnDrawGizmosSelected()
+        // เมื่อเดินออกมาห่างจากกล่อง
+        private void OnTriggerExit2D(Collider2D other)
         {
-            if (interactionPoint == null) return;
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+            IInteractable interactable = other.GetComponent<IInteractable>();
+            
+            if (interactable != null && interactable == currentInteractable)
+            {
+                currentInteractable.HideInteractionPrompt();
+                currentInteractable = null;
+            }
         }
     }
 }
